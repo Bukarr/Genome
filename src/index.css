@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Default: Dark Theme with Premium Indigo/Violet accent (No green neon) */
+  --bg: #0B0F19; /* Deeper dark for high-contrast slate feel */
+  --surface: #131A2C;
+  --card: #1B243B;
+  --border-accent: #263354;
+  --accent: #4F46E5;
+  --bright: #6366F1;
+  --neon: #4338CA;
+  --text-main: #F8FAFC;
+  --muted: #94A3B8;
+  --deep: #070A11;
+  --glow-color: rgba(79, 70, 229, 0.1);
+}
+
+/* Light Theme Mode */
+.light {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --card: #F1F5F9;
+  --border-accent: #E2E8F0;
+  --accent: #4F46E5;
+  --bright: #6366F1;
+  --neon: #3730A3;
+  --text-main: #0F172A;
+  --muted: #64748B;
+  --deep: #E2E8F0;
+  --glow-color: rgba(79, 70, 229, 0.08);
+}
+
+@theme {
+  /* Fonts mapping */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-syne: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Color mappings matching target design tokens */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-border-accent: var(--border-accent);
+  --color-accent: var(--accent);
+  --color-bright: var(--bright);
+  --color-neon: var(--neon);
+  --color-text-main: var(--text-main);
+  --color-muted: var(--muted);
+  --color-deep: var(--deep);
+  --color-error: #FF6B6B;
+  --color-warning: #FBBF24;
+}
+
+/* Base resets & styles custom for layout, glowing effects & scrolls */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Slow radial glow animation for premium backgrounds */
+@keyframes radial-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.35;
+  }
+}
+
+.glowing-bg {
+  position: relative;
+}
+
+.glowing-bg::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  animation: radial-pulse 8s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-accent);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
