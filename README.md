@@ -1,4 +1,4 @@
-# Genome AI - Secure Creator Content Strategy Workspace
+# Pulsr AI - Secure Creator Content Strategy Workspace
 
 Genome AI is a production-grade content strategy and planning application designed specifically for creators, writers, and digital strategist networks. By leveraging a local-first zero-trust methodology coupled with defensive backend security layers, it enables users to secure high-signal industry analysis, draft engaging multi-platform campaigns, manage publications through an interactive visual scheduler, and chat securely with an adaptive AI mentor.
 
