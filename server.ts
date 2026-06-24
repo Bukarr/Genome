@@ -676,6 +676,12 @@ app.all('/api/*', (req, res) => {
 // --- VITE MIDDLEWARE & STATIC ASSET DEV SERVER ---
 
 async function startServer() {
+  // If running inside Vercel serverless, do not spin up local asset serving or persistent listener
+  if (process.env.VERCEL === '1') {
+    console.log('[Pulsr Server] Running inside Vercel Serverless Environment.');
+    return;
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
