@@ -8,6 +8,7 @@ import { CalendarGrid } from './CalendarGrid';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { Input, Textarea } from '../ui/Input';
+import { pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface CalendarViewProps {
@@ -47,10 +48,10 @@ export function CalendarView({ onDraftPost }: CalendarViewProps) {
     }
 
     setBuildingCampaign(true);
-    const toastId = toast.loading('Genome is plotting your multi-day schedule...');
+    const toastId = toast.loading('Pulsr is plotting your multi-day schedule...');
 
     try {
-      const response = await fetch('/api/gemini/calendar', {
+      const response = await pulsrFetch('/api/gemini/calendar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

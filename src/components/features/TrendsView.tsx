@@ -7,6 +7,7 @@ import { TrendCard } from './TrendCard';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { TrendCardSkeleton } from '../ui/Skeleton';
+import { pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface TrendsViewProps {
@@ -29,7 +30,7 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
       setLoading(true);
       setErrorText('');
       
-      const response = await fetch('/api/gemini/trends', {
+      const response = await pulsrFetch('/api/gemini/trends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile }),

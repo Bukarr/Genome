@@ -38,7 +38,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       clearAnalytics: () => set({ events: [] }),
     }),
     {
-      name: 'genome-analytics',
+      name: 'pulsr-analytics',
     }
   )
 );

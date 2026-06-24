@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { TabType } from '../layout/MobileNav';
-import { formatRelativeTime } from '../../lib/utils';
+import { formatRelativeTime, pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface DashboardViewProps {
@@ -33,7 +33,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
       if (!profile) return;
       try {
         setWelcomeLoading(true);
-        const response = await fetch('/api/gemini/welcome', {
+        const response = await pulsrFetch('/api/gemini/welcome', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ profile }),
@@ -46,7 +46,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
       } catch (err) {
         console.error('AI Welcome Card failed:', err);
         if (active) {
-          setWelcomeMsg(`Welcome back, ${profile.name}! Amplify your expertise in ${profile.niche} today using Genome AI.`);
+          setWelcomeMsg(`Welcome back, ${profile.name}! Amplify your expertise in ${profile.niche} today using Pulsr AI.`);
         }
       } finally {
         if (active) setWelcomeLoading(false);
@@ -66,7 +66,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
       if (!profile) return;
       try {
         setTrendsLoading(true);
-        const response = await fetch('/api/gemini/trends', {
+        const response = await pulsrFetch('/api/gemini/trends', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ profile }),
@@ -139,7 +139,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
       color: 'bg-card border-border-accent/50 hover:border-accent/40 text-text-main',
     },
     {
-      label: 'Ask Genome AI',
+      label: 'Ask Pulsr AI',
       id: 'chat' as const,
       desc: 'Brainstorm with chatbot',
       icon: MessageSquare,
@@ -164,7 +164,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         ) : (
           <div className="space-y-2 select-text">
             <span className="text-[10px] tracking-wider uppercase font-mono text-accent font-extrabold flex items-center gap-1">
-              <Sparkles className="h-3 w-3 animate-pulse" /> Genome Strategic Advice
+              <Sparkles className="h-3 w-3 animate-pulse" /> Pulsr Strategic Advice
             </span>
             <p className="font-sans text-md md:text-lg text-text-main leading-relaxed font-semibold">
               "{welcomeMsg}"
@@ -181,7 +181,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         <div className="space-y-2 select-none">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs uppercase font-mono font-bold tracking-widest text-[#22C55E]">
-              Trending in: <span className="text-[#E8F5E9]">{profile?.niche}</span>
+              Trending in: <span className="text-text-main dark:text-[#E8F5E9] font-bold">{profile?.niche}</span>
             </h3>
           </div>
 

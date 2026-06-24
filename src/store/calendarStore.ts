@@ -39,7 +39,7 @@ export const useCalendarStore = create<CalendarState>()(
       clearCalendar: () => set({ items: [] }),
     }),
     {
-      name: 'genome-calendar',
+      name: 'pulsr-calendar',
     }
   )
 );

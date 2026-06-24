@@ -65,7 +65,7 @@ app.use((req, res, next) => {
 
 // Log incoming API requests to trace path routing
 app.use((req, res, next) => {
-  console.log(`[Genome Request Logger] ${req.method} ${req.url}`);
+  console.log(`[Pulsr Request Logger] ${req.method} ${req.url}`);
   next();
 });
 
@@ -131,7 +131,7 @@ async function generateContentJSONWithRetry(aiClient: any, apiParams: any) {
 
   for (const model of modelsToTry) {
     try {
-      console.log(`[Genome Resilient Model] Trying generation with model: ${model}`);
+      console.log(`[Pulsr Resilient Model] Trying generation with model: ${model}`);
       const params = { ...apiParams, model };
       const result = await aiClient.models.generateContent(params);
       if (!result || !result.text) {
@@ -141,12 +141,12 @@ async function generateContentJSONWithRetry(aiClient: any, apiParams: any) {
     } catch (error: any) {
       lastError = error;
       const errStr = String(error?.message || error || '');
-      console.warn(`[Genome Resilient Model] Attempt with model ${model} failed:`, errStr);
+      console.warn(`[Pulsr Resilient Model] Attempt with model ${model} failed:`, errStr);
     }
   }
 
   // propagate the last error back to client
-  console.error('[Genome Resilient Model] All cascading models failed.', lastError);
+  console.error('[Pulsr Resilient Model] All cascading models failed.', lastError);
   throw lastError || new Error('All models failed to generate content');
 }
 
@@ -180,6 +180,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     res.json(parsed);
   } catch (error: any) {
     console.warn('[Welcome API Exception] Falling back to high-fidelity local content:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const profile = req.body?.profile || {};
     const name = profile.name || 'Creator';
     const niche = profile.niche || 'Digital Tech';
@@ -238,6 +239,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     res.json(parsed);
   } catch (error: any) {
     console.warn('[Suggest API Exception] Falling back to high-fidelity local content:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const profile = req.body?.profile || {};
     const platform = req.body?.platform || 'Twitter/X';
     const format = req.body?.format || 'Short Post';
@@ -333,6 +335,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     res.json(parsed);
   } catch (error: any) {
     console.warn('[Trends API Exception] Falling back to high-fidelity local content:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const profile = req.body?.profile || {};
     const nicheName = profile.niche || 'Digital Growth';
     const profName = profile.profession || 'Specialist';
@@ -459,6 +462,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     res.json(parsed);
   } catch (error: any) {
     console.warn('[Calendar API Exception] Falling back to high-fidelity local planning schedule:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const profile = req.body?.profile || {};
     const baseStartDate = req.body?.startDate || new Date().toISOString().split('T')[0];
     const baseEndDate = req.body?.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -530,7 +534,7 @@ app.post('/api/gemini/chat', async (req: Request, res: Response) => {
     const ai = getAIClient();
     const profileContext = buildProfileContext(profile);
 
-    const systemInstruction = `You are Genome AI, a sharp, elite social media content strategist.
+    const systemInstruction = `You are Pulsr AI, a sharp, elite social media content strategist.
 ${profileContext}
 
 Be highly specific, professional, and direct. When giving post examples, make them immediately copyable and editable — never provide vague templates. Always speak to this user's exact niche and voice. Use clear formatting, bullet lists, bold text, and code block formatting where appropriate. Speak with confidence and authority.`;
@@ -549,7 +553,7 @@ Be highly specific, professional, and direct. When giving post examples, make th
 
     for (const model of modelsToTry) {
       try {
-        console.log(`[Genome Resilient Chat] Trying custom stream with model: ${model}`);
+        console.log(`[Pulsr Resilient Chat] Trying custom stream with model: ${model}`);
         resultStream = await ai.models.generateContentStream({
           model,
           contents,
@@ -561,7 +565,7 @@ Be highly specific, professional, and direct. When giving post examples, make th
         break;
       } catch (error: any) {
         streamError = error;
-        console.warn(`[Genome Resilient Chat] Stream failed for model ${model}:`, error?.message || error);
+        console.warn(`[Pulsr Resilient Chat] Stream failed for model ${model}:`, error?.message || error);
       }
     }
 
@@ -577,13 +581,14 @@ Be highly specific, professional, and direct. When giving post examples, make th
     res.end();
   } catch (error: any) {
     console.warn('[Chat API Exception] Falling back to high-fidelity offline chat simulation:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const { profile, messages } = req.body || {};
     const lastUserQuery = messages && messages.length > 0 ? messages[messages.length - 1]?.content : '';
     const name = profile?.name || 'Creator';
     const niche = profile?.niche || 'industry';
     const prof = profile?.profession || 'Specialist';
     
-    const reply = `Hi ${name}! I am Genome AI, your dedicated content strategist. 
+    const reply = `Hi ${name}! I am Pulsr AI, your dedicated content strategist. 
 
 I am currently running in our local, offline resilient strategist mode due to a temporary high demand limit or quota limit on the mainline Gemini cluster.
 
@@ -645,6 +650,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     res.json(parsed);
   } catch (error: any) {
     console.warn('[Refine API Exception] Falling back to high-fidelity local text optimization:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
     const { text } = req.body || {};
     const bodyText = text || '';
     const refined = `REFINED VERSION:
@@ -659,7 +665,7 @@ Strategist tip: Spaced out your line breaks and streamlined the pacing. This lay
 
 // Defensive fallback handler for any unmatched API endpoints
 app.all('/api/*', (req, res) => {
-  console.warn(`[Genome Router] Unmatched API request intercepted: ${req.method} ${req.url}`);
+  console.warn(`[Pulsr Router] Unmatched API request intercepted: ${req.method} ${req.url}`);
   res.status(404).json({
     error: `API path ${req.method} ${req.url} not found or unsupported.`,
     timestamp: new Date().toISOString()
@@ -686,7 +692,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Genome Server] running on http://localhost:${PORT}`);
+    console.log(`[Pulsr Server] running on http://localhost:${PORT}`);
   });
 }
 

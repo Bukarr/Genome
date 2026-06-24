@@ -34,7 +34,7 @@ export const useProfileStore = create<ProfileState>()(
       resetProfile: () => set({ profile: null }),
     }),
     {
-      name: 'genome-profile',
+      name: 'pulsr-profile',
     }
   )
 );

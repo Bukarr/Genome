@@ -177,7 +177,7 @@ export function OnboardingView({ onComplete }: OnboardingViewProps) {
             {/* Animated slow pulse bg */}
             <div className="space-y-3">
               <h1 className="font-syne font-extrabold text-accent text-4xl md:text-5xl leading-none tracking-tighter">
-                Genome<span className="text-text-main">AI</span>
+                Pulsr<span className="text-text-main">AI</span>
               </h1>
               <p className="text-muted tracking-wider text-xs uppercase font-mono font-bold">
                 Your voice. Amplified by AI.
@@ -343,7 +343,7 @@ export function OnboardingView({ onComplete }: OnboardingViewProps) {
               </div>
 
               <div className="bg-surface/35 border border-border-accent/40 rounded-xl p-3 select-none">
-                <p className="text-[11px] text-muted font-serif italic text-center">
+                <p className="text-[11px] text-muted font-sans italic text-center">
                   "The more specific you are, the smarter your suggestions get."
                 </p>
               </div>

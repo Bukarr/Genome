@@ -1,5 +1,16 @@
+import { useSystemStore } from '../store/systemStore';
+
 export function cn(...classes: (string | undefined | null | boolean | number)[]) {
   return classes.filter(Boolean).join(' ');
+}
+
+export async function pulsrFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init);
+  const isFallback = response.headers.get('x-pulsr-fallback') === 'true';
+  if (isFallback) {
+    useSystemStore.getState().setOfflineResilientMode(true);
+  }
+  return response;
 }
 
 export function formatRelativeTime(dateStr: string): string {

@@ -98,7 +98,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
       date: scheduleDate,
       platform: platform,
       format: suggestion.format,
-      topic: `${suggestion.headline} (Sent directly via Genome Optimizer)`,
+      topic: `${suggestion.headline} (Sent directly via Pulsr Optimizer)`,
       headline: suggestion.engagementHook,
       priority: priority,
       status: 'posted', // Mark instantly posted or planned depending on simulated dispatch time!
@@ -118,7 +118,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(suggestion, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `genome-post-${suggestion.id}.json`);
+    downloadAnchor.setAttribute('download', `pulsr-post-${suggestion.id}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -132,7 +132,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(suggestions, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `genome-all-drafts.json`);
+    downloadAnchor.setAttribute('download', `pulsr-all-drafts.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -172,7 +172,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataUri);
-    downloadAnchor.setAttribute('download', `genome-post-${suggestion.id}.csv`);
+    downloadAnchor.setAttribute('download', `pulsr-post-${suggestion.id}.csv`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -211,7 +211,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataUri);
-    downloadAnchor.setAttribute('download', `genome-bulk-marketing-feed.csv`);
+    downloadAnchor.setAttribute('download', `pulsr-bulk-marketing-feed.csv`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -224,13 +224,13 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     <Modal isOpen={isOpen} onClose={onClose} title="Publish & Export Optimization Hub">
       <div className="space-y-6 select-none">
         {/* Suggestion Summary Header */}
-        <div className="bg-[#0A1A0D] border border-[#22C55E]/20 p-4 rounded-xl space-y-2">
+        <div className="bg-emerald-50/50 dark:bg-[#0A1A0D] border border-emerald-500/10 dark:border-[#22C55E]/20 p-4 rounded-xl space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-[#4A7A52]">Active Selection Draft</span>
+            <span className="text-[10px] uppercase font-mono tracking-wider text-[#4A7A52] dark:text-emerald-400">Active Selection Draft</span>
             <Badge variant="accent">{suggestion.platform} • {suggestion.format}</Badge>
           </div>
           <p className="text-sm font-semibold text-bright italic line-clamp-1">"{suggestion.engagementHook || suggestion.headline}"</p>
-          <div className="flex items-center gap-2 text-xs font-mono text-muted pt-1 border-t border-dashed border-[#132B18]">
+          <div className="flex items-center gap-2 text-xs font-mono text-muted pt-1 border-t border-dashed border-emerald-500/10 dark:border-[#132B18]">
             <Clock className="h-3.5 w-3.5 text-accent" />
             <span>Optimal Publishing window: <strong className="text-text-main font-mono">{suggestion.bestTimeToPost}</strong></span>
           </div>
@@ -303,7 +303,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
             <div className="pt-3 border-t border-border-accent/35 space-y-3">
               <h4 className="text-[10px] uppercase font-mono font-bold tracking-widest text-[#22C55E]">Option A: Simulate Direct Push API</h4>
               <p className="text-[11px] leading-relaxed text-muted font-sans">
-                Post instantly to your primary feed via Genome's virtual OAuth transmission framework. Adds slot automatically onto planner dashboard.
+                Post instantly to your primary feed via Pulsr's virtual OAuth transmission framework. Adds slot automatically onto planner dashboard.
               </p>
               <Button 
                 variant="primary" 
@@ -375,7 +375,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
 
                 <div className="space-y-1 max-w-sm mx-auto">
                   <p className="text-sm font-semibold tracking-wide text-bright">Simulating Direct Social API Transmission</p>
-                  <p className="text-xs font-mono text-[#22C55E] bg-[#0A1A0D] p-3 rounded-lg border border-[#22C55E]/15 animate-pulse min-h-[44px]">
+                  <p className="text-xs font-mono text-accent dark:text-[#22C55E] bg-emerald-50/50 dark:bg-[#0A1A0D] p-3 rounded-lg border border-emerald-500/15 dark:border-[#22C55E]/15 animate-pulse min-h-[44px]">
                     {statusMessage}
                   </p>
                 </div>
@@ -393,13 +393,13 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
                 </div>
 
                 {/* Twitter / LinkedIn custom mini-card preview */}
-                <div className="text-left bg-[#020C05] border border-[#132B18] p-5 rounded-xl space-y-3 font-sans max-w-sm mx-auto shadow-2xl relative select-text">
+                <div className="text-left bg-surface dark:bg-[#020C05] border border-border-accent dark:border-[#132B18] p-5 rounded-xl space-y-3 font-sans max-w-sm mx-auto shadow-2xl relative select-text">
                   <div className="absolute top-4 right-4 text-muted">
                     {platform === 'Twitter/X' ? <Twitter className="h-4 w-4 text-[#1DA1F2]" /> : <Linkedin className="h-4 w-4 text-[#0A66C2]" />}
                   </div>
 
                   <div className="flex gap-2.5 items-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent to-[#4ADE80] flex items-center justify-center text-xs font-extrabold text-bg select-none">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent to-[#4ADE80] flex items-center justify-center text-xs font-extrabold text-white dark:text-bg select-none">
                       {profile.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -421,7 +421,7 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center text-[10px] text-muted border-t border-dashed border-[#132B18] pt-2.5 mt-2.5 select-none font-mono">
+                  <div className="flex justify-between items-center text-[10px] text-muted border-t border-dashed border-border-accent dark:border-[#132B18] pt-2.5 mt-2.5 select-none font-mono">
                     <span className="flex items-center gap-1">💬 0</span>
                     <span className="text-[#22C55E]">🔁 1 Retweet</span>
                     <span className="text-[#22C55E]">💚 2 Likes</span>

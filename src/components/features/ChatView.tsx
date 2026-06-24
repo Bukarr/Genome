@@ -6,6 +6,7 @@ import { ChatMessage } from '../../types';
 import { ChatBubble, TypingIndicator } from './ChatBubble';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 export function ChatView() {
@@ -32,7 +33,7 @@ export function ChatView() {
 
   // Load chat history from localStorage on mounting
   useEffect(() => {
-    const historical = localStorage.getItem('genome-chat-history');
+    const historical = localStorage.getItem('pulsr-chat-history');
     if (historical) {
       try {
         setMessages(JSON.parse(historical));
@@ -45,7 +46,7 @@ export function ChatView() {
         setMessages([
           {
             role: 'model',
-            content: `Hello! I am Genome AI, your dedicated content strategist. I understand you are focused on **${profile.niche}** on **${profile.primaryPlatform}**, seeking to *${profile.postingGoals.join(', ').toLowerCase()}*.\n\nAsk me to brainstorm hooks, rewrite posts, outline threads, or draft caption reels. What are we planning today?`,
+            content: `Hello! I am Pulsr AI, your dedicated content strategist. I understand you are focused on **${profile.niche}** on **${profile.primaryPlatform}**, seeking to *${profile.postingGoals.join(', ').toLowerCase()}*.\n\nAsk me to brainstorm hooks, rewrite posts, outline threads, or draft caption reels. What are we planning today?`,
           },
         ]);
       }
@@ -55,7 +56,7 @@ export function ChatView() {
   // Sync to local storage
   const syncChatState = (history: ChatMessage[]) => {
     setMessages(history);
-    localStorage.setItem('genome-chat-history', JSON.stringify(history));
+    localStorage.setItem('pulsr-chat-history', JSON.stringify(history));
   };
 
   // Clear Chat history
@@ -93,7 +94,7 @@ export function ChatView() {
     setStreamingContent('');
 
     try {
-      const response = await fetch('/api/gemini/chat', {
+      const response = await pulsrFetch('/api/gemini/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export function ChatView() {
       // Once finished completely, merge active stream to history state
       const modelFinishedMsg: ChatMessage = {
         role: 'model',
-        content: accumulatedOutput || 'Genome was unable to summarize a response.',
+        content: accumulatedOutput || 'Pulsr was unable to summarize a response.',
       };
       
       syncChatState([...updatedHistory, modelFinishedMsg]);

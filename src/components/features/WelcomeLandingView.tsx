@@ -31,7 +31,7 @@ export function WelcomeLandingView({
 
   const handleProceed = (onboarding: boolean) => {
     if (hideNextTime) {
-      localStorage.setItem('genome-hide-landing', 'true');
+      localStorage.setItem('pulsr-hide-landing', 'true');
     }
     if (onboarding) {
       onStartOnboarding();
@@ -66,7 +66,7 @@ export function WelcomeLandingView({
             transition={{ duration: 0.5, delay: 0.1 }}
             className="font-syne font-extrabold text-4xl sm:text-6xl text-bright tracking-tight"
           >
-            Genome<span className="text-text-main">AI</span>
+            Pulsr<span className="text-text-main">AI</span>
           </motion.h1>
 
           <motion.p
@@ -89,7 +89,7 @@ export function WelcomeLandingView({
           <div className="space-y-2">
             <h2 className="text-xl font-bold font-syne text-bright">Enter the Workspace</h2>
             <p className="text-xs text-muted max-w-md mx-auto leading-relaxed">
-              Genome AI syncs custom content models directly to your browser key-chains. No third-party servers ever leak your details.
+              Pulsr AI syncs custom content models directly to your browser key-chains. No third-party servers ever leak your details.
             </p>
           </div>
 
@@ -201,7 +201,7 @@ export function WelcomeLandingView({
               </div>
               <h3 className="font-syne font-bold text-text-main text-base">Adaptive Content Strategist</h3>
               <p className="text-xs text-muted leading-relaxed">
-                Directly chat with Genome AI content strategist trained in your exclusive persona. Recalibrates instantly to feedback, draft scripts, or outline threads.
+                Directly chat with Pulsr AI content strategist trained in your exclusive persona. Recalibrates instantly to feedback, draft scripts, or outline threads.
               </p>
             </motion.div>
 
@@ -268,7 +268,7 @@ export function WelcomeLandingView({
       {/* Footer */}
       <footer className="w-full text-center py-6 border-t border-border-accent/15 z-10 select-none bg-surface/10">
         <span className="text-[10px] font-mono text-muted uppercase tracking-widest">
-          GENOME AI v1.2.0 • BUILT WITH DEEP SECURITY PROTOCOLS • SSL VERIFIED
+          PULSR AI v1.2.0 • BUILT WITH DEEP SECURITY PROTOCOLS • SSL VERIFIED
         </span>
       </footer>
     </div>

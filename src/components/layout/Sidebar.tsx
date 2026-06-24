@@ -36,7 +36,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* Brand Header */}
       <div className="p-6 pb-4 flex items-center gap-2">
         <span className="font-syne font-extrabold text-accent select-none text-2xl tracking-tight">
-          Genome<span className="text-text-main">.</span>
+          Pulsr<span className="text-text-main">.</span>
         </span>
       </div>
 

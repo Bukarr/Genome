@@ -1,6 +1,6 @@
 {
-  "name": "Genome",
-  "description": "A clean, mobile-first, and highly-optimized AI content suite and generator.",
+  "name": "Pulsr",
+  "description": "A dark minimal, highly secure content strategy and planning workspace for creators.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

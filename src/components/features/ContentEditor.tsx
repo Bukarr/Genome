@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Save, Check } from 'lucide-react';
 import { ContentSuggestion } from '../../types';
-import { getCharacterLimit, getPlatformColor } from '../../lib/utils';
+import { getCharacterLimit, getPlatformColor, pulsrFetch } from '../../lib/utils';
 import { Textarea, Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -40,20 +40,20 @@ export function ContentEditor({ suggestion, onSave, onClose }: ContentEditorProp
     }
 
     setImproving(true);
-    const toastId = toast.loading('Genome is polishing your draft...');
+    const toastId = toast.loading('Pulsr is polishing your draft...');
 
     try {
-      const storedProfile = localStorage.getItem('genome-profile');
+      const storedProfile = localStorage.getItem('pulsr-profile');
       let profileObj = {};
       if (storedProfile) {
         try {
           profileObj = JSON.parse(storedProfile)?.state?.profile || {};
         } catch (e) {
-          console.error('Failed to parse genome-profile state:', e);
+          console.error('Failed to parse pulsr-profile state:', e);
         }
       }
 
-      const response = await fetch('/api/gemini/refine', {
+      const response = await pulsrFetch('/api/gemini/refine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -81,7 +81,7 @@ export function ContentEditor({ suggestion, onSave, onClose }: ContentEditorProp
         setRefinePrompt(''); // Clear instructions bar
         toast.success('Draft polished successfully by AI!', { id: toastId });
       } else {
-        throw new Error('Invalid output format from Genome');
+        throw new Error('Invalid output format from Pulsr');
       }
     } catch (error: any) {
       console.error('Improve With AI Error:', error);
@@ -164,7 +164,7 @@ export function ContentEditor({ suggestion, onSave, onClose }: ContentEditorProp
       {/* Polish Section */}
       <div className="border-t border-border-accent/35 pt-4 space-y-2.5">
         <label className="text-xs font-mono font-bold uppercase tracking-wider text-accent block">
-          Improve with Genome AI
+          Improve with Pulsr AI
         </label>
         <div className="flex gap-2">
           <Input

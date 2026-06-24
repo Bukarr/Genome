@@ -24,7 +24,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: 'genome-theme',
+      name: 'pulsr-theme',
     }
   )
 );

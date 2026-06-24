@@ -37,7 +37,7 @@ export const useContentStore = create<ContentState>()(
       clearSuggestions: () => set({ suggestions: [] }),
     }),
     {
-      name: 'genome-content',
+      name: 'pulsr-content',
     }
   )
 );

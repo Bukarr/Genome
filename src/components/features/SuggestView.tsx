@@ -14,6 +14,7 @@ import { ContentEditor } from './ContentEditor';
 import { ContentCardSkeleton } from '../ui/Skeleton';
 import { BottomSheet } from '../ui/BottomSheet';
 import { PublishExportModal } from './PublishExportModal';
+import { pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface SuggestViewProps {
@@ -89,10 +90,10 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
     const targetTopic = customTopic !== undefined ? customTopic : topic;
 
     setLoading(true);
-    const toastId = toast.loading('Genome is channeling Gemini AI...');
+    const toastId = toast.loading('Pulsr is channeling Gemini AI...');
 
     try {
-      const response = await fetch('/api/gemini/suggest', {
+      const response = await pulsrFetch('/api/gemini/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

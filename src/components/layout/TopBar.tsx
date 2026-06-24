@@ -1,6 +1,7 @@
-import { Settings, Sun, Moon } from 'lucide-react';
+import { Settings, Sun, Moon, Smartphone } from 'lucide-react';
 import { useProfileStore } from '../../store/profileStore';
 import { useThemeStore } from '../../store/themeStore';
+import { useSystemStore } from '../../store/systemStore';
 import { Button } from '../ui/Button';
 import { TabType } from './MobileNav';
 
@@ -12,6 +13,7 @@ interface TopBarProps {
 export function TopBar({ activeTab, setActiveTab }: TopBarProps) {
   const { profile } = useProfileStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { mobileSimulated, setMobileSimulated } = useSystemStore();
 
   const getPageTitle = () => {
     switch (activeTab) {
@@ -24,16 +26,16 @@ export function TopBar({ activeTab, setActiveTab }: TopBarProps) {
       case 'calendar':
         return 'Content Schedule';
       case 'chat':
-        return 'Genome AI Assistant';
+        return 'Pulsr AI Assistant';
       case 'settings':
         return 'System Settings';
       default:
-        return 'Genome';
+        return 'Pulsr';
     }
   };
 
   const getInitials = () => {
-    if (!profile?.name) return 'GN';
+    if (!profile?.name) return 'PL';
     return profile.name
       .split(' ')
       .map((n) => n[0])
@@ -52,7 +54,7 @@ export function TopBar({ activeTab, setActiveTab }: TopBarProps) {
         {/* Brand Logo Centered */}
         <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setActiveTab('home')}>
           <span className="font-syne font-extrabold text-accent select-none text-xl tracking-tight">
-            Genome<span className="text-text-main">.</span>
+            Pulsr<span className="text-text-main">.</span>
           </span>
         </div>
 
@@ -87,6 +89,18 @@ export function TopBar({ activeTab, setActiveTab }: TopBarProps) {
 
         {/* Right Side Controls & Avatar */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileSimulated(!mobileSimulated)}
+            className={`rounded-full min-w-[36px] min-h-[36px] p-1.5 hover:bg-surface transition-all ${
+              mobileSimulated ? 'text-accent bg-accent/10 border border-accent/25' : 'text-muted hover:text-text-main'
+            }`}
+            title={mobileSimulated ? 'Exit Native Mobile Simulator' : 'Preview in Native Mobile Simulator'}
+          >
+            <Smartphone className="h-5 w-5" />
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"

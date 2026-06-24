@@ -1,41 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 :root {
-  /* Default: Dark Theme with Premium Indigo/Violet accent (No green neon) */
-  --bg: #0B0F19; /* Deeper dark for high-contrast slate feel */
-  --surface: #131A2C;
-  --card: #1B243B;
-  --border-accent: #263354;
-  --accent: #4F46E5;
-  --bright: #6366F1;
-  --neon: #4338CA;
-  --text-main: #F8FAFC;
-  --muted: #94A3B8;
-  --deep: #070A11;
-  --glow-color: rgba(79, 70, 229, 0.1);
+  /* Dark minimal UI color palette */
+  --bg: #0A0F1E; /* Deep navy-black background */
+  --surface: #111827; /* Dark card surfaces */
+  --card: #1F2937; /* Slightly lighter card surfaces */
+  --border-accent: #2D3748; /* Clean dev tools border */
+  --accent: #00D4AA; /* Cyan-green primary accent */
+  --bright: #33E0BB; /* Brighter highlight cyan-green */
+  --neon: #008B6E; /* Deep shadow/neon cyan-green */
+  --text-main: #E8EDF2; /* Off-white body text */
+  --muted: #6B7280; /* Muted gray for secondary text */
+  --deep: #05070D; /* Darkest black pocket */
+  --glow-color: rgba(0, 212, 170, 0.08);
 }
 
-/* Light Theme Mode */
+/* Light Theme Mode mapped to a beautiful, elegant, high-contrast slate-and-teal palette */
 .light {
-  --bg: #F8FAFC;
-  --surface: #FFFFFF;
-  --card: #F1F5F9;
-  --border-accent: #E2E8F0;
-  --accent: #4F46E5;
-  --bright: #6366F1;
-  --neon: #3730A3;
-  --text-main: #0F172A;
-  --muted: #64748B;
-  --deep: #E2E8F0;
-  --glow-color: rgba(79, 70, 229, 0.08);
+  --bg: #F8FAFC; /* Slate 50 - clean, bright page background */
+  --surface: #FFFFFF; /* Pure white for cards, sidebars, and panels */
+  --card: #F1F5F9; /* Slate 100 - secondary container background */
+  --border-accent: #E2E8F0; /* Slate 200 - clear and subtle light borders */
+  --accent: #0D9488; /* Teal 600 - rich, high-contrast readable teal brand accent */
+  --bright: #0F766E; /* Teal 700 - darker/richer contrast hover state */
+  --neon: #14B8A6; /* Teal 500 - brighter highlight teal */
+  --text-main: #0F172A; /* Slate 900 - high-contrast rich dark body text */
+  --muted: #64748B; /* Slate 500 - elegant neutral slate muted gray */
+  --deep: #E2E8F0; /* Slate 200 - soft grey pocket shading */
+  --glow-color: rgba(13, 148, 136, 0.04); /* Soft teal radial glow */
 }
 
 @theme {
   /* Fonts mapping */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-syne: 'Plus Jakarta Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
+  --font-syne: 'Syne', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
 
   /* Color mappings matching target design tokens */
   --color-bg: var(--bg);
@@ -59,6 +59,10 @@ body {
   font-family: var(--font-sans);
   overflow-x: hidden;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 /* Slow radial glow animation for premium backgrounds */

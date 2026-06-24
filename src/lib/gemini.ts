@@ -23,4 +23,4 @@ export function getAIClient(): GoogleGenAI {
 
 // Model identifiers based on target specs and gemini-api skill instructions
 export const FLASH_MODEL = 'gemini-3.5-flash';
-export const PRO_MODEL = 'gemini-3.5-flash';
+export const PRO_MODEL = 'gemini-3.1-pro-preview';

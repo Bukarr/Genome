@@ -19,9 +19,9 @@ Genome AI empowers you to:
 ## 🎨 Creative Theme & Aesthetic Selection
 
 Genome AI is polished using custom typographic design foundations:
-- **Primary Typography**: **Inter** (sans-serif) is selected for clean general UI controls and forms to ensure high aesthetic rhythm and legible density.
-- **Display Typography**: **Plus Jakarta Sans** (sans-serif) provides sophisticated weight, geometric appeal, and balanced tracking for high-impact headlines and main segment branding.
-- **Technical Readouts**: **JetBrains Mono** is utilized for metadata outputs, logs, timeline indicators, and status badges.
+- **Primary Typography**: **Geist** paired with **Inter** (sans-serif) is selected for clean general UI controls and forms to ensure high aesthetic rhythm and legible density.
+- **Display Typography**: **Syne** (sans-serif) provides sophisticated weight, geometric appeal, and balanced tracking for high-impact headlines and main segment branding.
+- **Technical Readouts**: **Geist Mono** is utilized for metadata outputs, logs, timeline indicators, and status badges.
 - **Aesthetic Tone**: Framed within an eye-safe dark slate surface theme with glowing accent shadows (`emerald` and `violet`), maintaining massive negative space and strict alignment.
 
 ---
