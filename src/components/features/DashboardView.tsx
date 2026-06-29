@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, TrendingUp, Calendar, MessageSquare, Copy, Check, ArrowRight } from 'lucide-react';
+import { Sparkles, TrendingUp, Calendar, MessageSquare, Copy, Check, ArrowRight, Smartphone, Facebook, Linkedin, Instagram, Twitter } from 'lucide-react';
 import { useProfileStore } from '../../store/profileStore';
 import { useContentStore } from '../../store/contentStore';
+import { useSystemStore } from '../../store/systemStore';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -11,12 +12,13 @@ import { formatRelativeTime, pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface DashboardViewProps {
-  onNavigate: (tab: TabType, prefilledTopic?: string) => void;
+  onNavigate: (tab: TabType, prefilledTopic?: string, prefilledPlatform?: string) => void;
 }
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
   const { profile } = useProfileStore();
   const { suggestions } = useContentStore();
+  const { mobileSimulated, setMobileSimulated } = useSystemStore();
 
   const [welcomeMsg, setWelcomeMsg] = useState('');
   const [welcomeLoading, setWelcomeLoading] = useState(true);
@@ -215,6 +217,69 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Direct Platform Drafting Section */}
+      <div className="space-y-3 select-none">
+        <h3 className="text-xs uppercase font-mono font-bold tracking-widest text-muted px-1">
+          Select Platform to Auto-Draft
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { name: 'Twitter/X', label: 'X (Twitter)', icon: Twitter, color: 'text-sky-400 border-sky-500/20 bg-sky-950/10 hover:border-sky-500/40' },
+            { name: 'LinkedIn', label: 'LinkedIn', icon: Linkedin, color: 'text-indigo-400 border-indigo-500/20 bg-indigo-950/10 hover:border-indigo-500/40' },
+            { name: 'Facebook', label: 'Facebook', icon: Facebook, color: 'text-blue-400 border-blue-500/20 bg-blue-950/10 hover:border-blue-500/40' },
+            { name: 'Instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-400 border-pink-500/20 bg-pink-950/10 hover:border-pink-500/40' },
+          ].map((plat) => {
+            const PlatIcon = plat.icon;
+            return (
+              <button
+                key={plat.name}
+                onClick={() => {
+                  toast.success(`Drafting tailored content for ${plat.label}...`);
+                  onNavigate('suggest', undefined, plat.name);
+                }}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-200 cursor-pointer active:scale-95 group hover:shadow-md ${plat.color}`}
+              >
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-current/10 mb-2">
+                  <PlatIcon className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-mono font-bold text-text-main group-hover:text-bright transition-colors">
+                  {plat.label}
+                </span>
+                <span className="text-[9px] text-muted font-mono mt-1">
+                  Draft with AI
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Premium Mobile Simulator Callout Banner */}
+      {!mobileSimulated && (
+        <Card className="bg-gradient-to-r from-accent/15 via-accent/5 to-surface border-accent/25 p-5 flex flex-col md:flex-row items-center justify-between gap-4 select-none animate-fade-in relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none group-hover:bg-accent/10 transition-all duration-300" />
+          <div className="space-y-1.5 text-left z-10">
+            <span className="text-[10px] uppercase font-mono font-extrabold text-accent flex items-center gap-1">
+              <Smartphone className="h-3.5 w-3.5 animate-bounce" /> Premium Mobile Design
+            </span>
+            <h4 className="font-syne font-bold text-text-main text-sm sm:text-base leading-tight">
+              Test & Simulate Live Mobile Native Hub
+            </h4>
+            <p className="text-xs text-muted max-w-xl leading-relaxed">
+              Toggle the immersive native mobile simulator with multi-device frames (iPhone, Galaxy, Pixel), customizable side keys, active haptic controllers, and dynamic network statuses.
+            </p>
+          </div>
+          <Button
+            onClick={() => setMobileSimulated(true)}
+            variant="primary"
+            size="sm"
+            className="w-full md:w-auto font-mono font-bold text-[11px] uppercase tracking-wider shrink-0 flex items-center gap-1.5 justify-center py-2 px-4 shadow-[0_4px_20px_rgba(0,212,170,0.15)] hover:shadow-[0_4px_25px_rgba(0,212,170,0.25)] transition-all cursor-pointer z-10 active:scale-95"
+          >
+            Launch Mobile Hub <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </Card>
       )}
 
       {/* 3. Quick Actions 4-tile layout */}

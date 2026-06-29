@@ -20,17 +20,35 @@ import toast from 'react-hot-toast';
 interface SuggestViewProps {
   prefilledTopic?: string;
   clearPrefilledTopic: () => void;
+  prefilledPlatform?: string;
+  clearPrefilledPlatform?: () => void;
 }
 
-export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestViewProps) {
+export function SuggestView({ 
+  prefilledTopic, 
+  clearPrefilledTopic,
+  prefilledPlatform,
+  clearPrefilledPlatform
+}: SuggestViewProps) {
   const { profile } = useProfileStore();
-  const { suggestions, addSuggestion, updateSuggestion, deleteSuggestion } = useContentStore();
+  const { 
+    suggestions, 
+    addSuggestion, 
+    updateSuggestion, 
+    deleteSuggestion, 
+    cleanupOldSuggestions,
+    autoClearDays
+  } = useContentStore();
   const { trackEvent } = useAnalyticsStore();
 
   const [platform, setPlatform] = useState('Twitter/X');
   const [format, setFormat] = useState('Single Tweet');
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Platform-specific localized trends state
+  const [platformTrends, setPlatformTrends] = useState<{ topic: string; reason: string; contentAngle: string }[]>([]);
+  const [loadingPlatformTrends, setLoadingPlatformTrends] = useState(false);
 
   // Editor states
   const [editingSuggestion, setEditingSuggestion] = useState<ContentSuggestion | null>(null);
@@ -40,6 +58,61 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
   const [publishingItem, setPublishingItem] = useState<ContentSuggestion | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
+  // Fetch platform-specific country location aware trends when platform or profile changes
+  useEffect(() => {
+    if (!profile) return;
+    
+    const fetchPlatformTrends = async () => {
+      setLoadingPlatformTrends(true);
+      try {
+        const response = await pulsrFetch('/api/gemini/platform-trends', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profile,
+            platform,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setPlatformTrends(Array.isArray(data) ? data : []);
+        } else {
+          setPlatformTrends([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch platform trends:', err);
+        setPlatformTrends([]);
+      } finally {
+        setLoadingPlatformTrends(false);
+      }
+    };
+
+    fetchPlatformTrends();
+  }, [platform, profile]);
+
+  // Trigger automatic old suggestions clean-up on load & setup a periodic TTL background timer
+  useEffect(() => {
+    cleanupOldSuggestions();
+
+    if (autoClearDays > 0) {
+      const interval = setInterval(() => {
+        cleanupOldSuggestions();
+      }, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [cleanupOldSuggestions, autoClearDays]);
+
+  // Clean up cache automatically if 'Clear Cache on Exit' toggle is active when leaving the SuggestView
+  useEffect(() => {
+    return () => {
+      const state = useContentStore.getState();
+      if (state.clearCacheOnExit) {
+        state.clearSuggestions();
+        toast.success('Pulsr Optimizer workspace auto-cleared on exit.');
+      }
+    };
+  }, []);
+
   // If prefilled topic is passed from Dashboard/Trends, consume and populate it
   useEffect(() => {
     if (prefilledTopic) {
@@ -48,6 +121,31 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
       clearPrefilledTopic();
     }
   }, [prefilledTopic]);
+
+  // If prefilled platform is passed from Dashboard/etc, set active platform and trigger generation
+  useEffect(() => {
+    if (prefilledPlatform) {
+      const selectedPlatform = prefilledPlatform;
+      setPlatform(selectedPlatform);
+      
+      const formats = getFormatOptions(selectedPlatform);
+      const defaultFormat = formats[0];
+      setFormat(defaultFormat);
+
+      const targetTopic = prefilledTopic || `Strategic content about ${profile?.niche || 'authority building'} in the field of ${profile?.profession || 'expertise'}`;
+      
+      // Clear in parent so we don't trigger infinitely
+      if (clearPrefilledPlatform) clearPrefilledPlatform();
+      if (clearPrefilledTopic) clearPrefilledTopic();
+
+      // Trigger auto-generation and open in editor
+      handleGenerateContent(targetTopic, selectedPlatform, defaultFormat).then((newSug) => {
+        if (newSug) {
+          handleOpenEditor(newSug);
+        }
+      });
+    }
+  }, [prefilledPlatform]);
 
   // Handle formats based on selected platform
   const getFormatOptions = (plat: string) => {
@@ -79,7 +177,7 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
   };
 
   // 3. Generation Logic (calls POST /api/gemini/suggest)
-  const handleGenerateContent = async (customTopic?: string, customPlatform?: string, customFormat?: string) => {
+  const handleGenerateContent = async (customTopic?: string, customPlatform?: string, customFormat?: string): Promise<ContentSuggestion | undefined> => {
     if (!profile) {
       toast.error('Profile metrics not found. Recalibrate in Settings.');
       return;
@@ -136,6 +234,7 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
         
         // Clear topic field back to original
         setTopic('');
+        return newSuggestion;
       } else {
         throw new Error('Received incomplete response data structure.');
       }
@@ -145,6 +244,7 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
     } finally {
       setLoading(false);
     }
+    return undefined;
   };
 
   // Regenerate button event
@@ -168,7 +268,7 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
     setEditingSuggestion(null);
   };
 
-  const platforms = ['Twitter/X', 'LinkedIn', 'Instagram', 'Threads', 'TikTok', 'All platforms'];
+  const platforms = ['Twitter/X', 'LinkedIn', 'Facebook', 'Instagram', 'Threads', 'TikTok', 'All platforms'];
   const formattedOptionsList = getFormatOptions(platform);
 
   return (
@@ -216,6 +316,45 @@ export function SuggestView({ prefilledTopic, clearPrefilledTopic }: SuggestView
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 2b. Platform Specific Localized Trends Row */}
+        <div className="space-y-1.5 flex flex-col border-t border-border-accent/30 pt-3">
+          <label className="text-xs font-mono font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent"></span>
+            </span>
+            Trending on {platform} ({profile?.geolocation || 'Global'})
+          </label>
+          
+          {loadingPlatformTrends ? (
+            <div className="flex gap-2 overflow-x-auto py-1 scrollbar-none">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-[52px] w-52 rounded-xl bg-bg/50 border border-border-accent/15 animate-pulse shrink-0" />
+              ))}
+            </div>
+          ) : platformTrends && platformTrends.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {platformTrends.map((trend, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setTopic(trend.topic);
+                    toast.success(`Loaded trend: "${trend.topic}"`);
+                    trackEvent('trend_view', `Selected trending topic: ${trend.topic} for ${platform}`, { trend });
+                  }}
+                  className="flex flex-col text-left p-2.5 rounded-xl border border-border-accent/15 bg-bg/50 hover:bg-bg hover:border-accent/30 transition-all cursor-pointer shrink-0 w-56 select-none active:scale-95 group/trend"
+                >
+                  <span className="text-xs font-bold text-accent font-mono truncate w-full group-hover/trend:text-bright transition-colors">{trend.topic}</span>
+                  <span className="text-[10px] text-muted line-clamp-1 mt-0.5 leading-tight">{trend.reason}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[10px] text-muted font-mono py-1">No active trends found for this location & niche on {platform}.</p>
+          )}
         </div>
 
         {/* 3. Short Keyword search input */}

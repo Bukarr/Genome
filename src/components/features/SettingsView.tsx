@@ -30,7 +30,8 @@ import {
   Copy,
   Check,
   RotateCcw,
-  ShieldCheck
+  ShieldCheck,
+  Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -40,7 +41,7 @@ interface SettingsViewProps {
 
 export function SettingsView({ onReset }: SettingsViewProps) {
   const { profile, setProfile, resetProfile } = useProfileStore();
-  const { suggestions, clearSuggestions } = useContentStore();
+  const { suggestions, clearSuggestions, autoClearDays, setAutoClearDays, clearCacheOnExit, setClearCacheOnExit } = useContentStore();
   const { items, clearCalendar } = useCalendarStore();
   const { events, clearAnalytics } = useAnalyticsStore();
 
@@ -569,6 +570,90 @@ export function SettingsView({ onReset }: SettingsViewProps) {
               })}
             </div>
           )}
+        </div>
+      </Card>
+
+      {/* Automated Content Retention Feature */}
+      <Card className="border-border-accent/40 select-none bg-gradient-to-br from-card to-surface/30">
+        <div className="flex items-center gap-2 border-b border-border-accent/35 pb-3 mb-4 select-none">
+          <Clock className="h-4.5 w-4.5 text-accent" />
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-accent">
+            Automated Content Retention
+          </h3>
+          <Badge variant="accent" className="ml-auto">Auto-Purge Engine</Badge>
+        </div>
+
+        <div className="space-y-4 font-sans text-sm">
+          <p className="text-xs text-muted leading-relaxed">
+            Configure how long generated content suggestions and drafts remain stored in your local inventory. Old drafts are automatically cleared to keep your Pulsr optimizer workspace clutter-free.
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-bg/25 border border-border-accent/15 rounded-xl">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-text-main font-mono">Retention Threshold</span>
+              <p className="text-[10px] text-muted leading-tight">Drafts older than this will be automatically recycled.</p>
+            </div>
+            
+            <div className="flex gap-1.5 bg-bg p-1 rounded-lg border border-border-accent/20">
+              {[
+                { value: 1, label: '24 Hours' },
+                { value: 3, label: '3 Days' },
+                { value: 7, label: '7 Days' },
+                { value: 0, label: 'Never' }
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setAutoClearDays(opt.value);
+                    if (opt.value > 0) {
+                      toast.success(`Retention threshold updated! Drafts older than ${opt.label} cleared.`);
+                    } else {
+                      toast.success('Auto-clear disabled. Drafts will persist indefinitely.');
+                    }
+                  }}
+                  className={`text-[10px] uppercase font-mono font-bold px-2.5 py-1.5 rounded-md transition-all whitespace-nowrap cursor-pointer ${
+                    autoClearDays === opt.value
+                      ? 'bg-accent/15 text-accent border border-accent/30'
+                      : 'text-muted hover:text-text-main border border-transparent'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-bg/25 border border-border-accent/15 rounded-xl mt-3">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-text-main font-mono">Clear Content on Exit</span>
+              <p className="text-[10px] text-muted leading-tight">Automatically purge all generated post content when switching tabs or closing the app.</p>
+            </div>
+            
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const newVal = !clearCacheOnExit;
+                  setClearCacheOnExit(newVal);
+                  if (newVal) {
+                    toast.success('Clear Content on Exit enabled. Suggestions will be auto-purged on tab switch or app exit.');
+                  } else {
+                    toast.success('Clear Content on Exit disabled. Suggestions will persist.');
+                  }
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  clearCacheOnExit ? 'bg-accent' : 'bg-muted/30'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    clearCacheOnExit ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
       </Card>
 

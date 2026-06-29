@@ -11,13 +11,14 @@ import { pulsrFetch } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface TrendsViewProps {
-  onNavigateToSuggest: (topic: string) => void;
+  onNavigateToSuggest: (topic: string, platform?: string) => void;
 }
 
 export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
   const { profile } = useProfileStore();
   const { trackEvent } = useAnalyticsStore();
 
+  const [activePlatform, setActivePlatform] = useState(profile?.primaryPlatform || 'LinkedIn');
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState('');
@@ -33,7 +34,7 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
       const response = await pulsrFetch('/api/gemini/trends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile }),
+        body: JSON.stringify({ profile, platform: activePlatform }),
       });
 
       if (!response.ok) {
@@ -84,7 +85,7 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
 
   useEffect(() => {
     getGroundedTrends();
-  }, [profile]);
+  }, [profile, activePlatform]);
 
   // Divide into sections
   const hotTrends = trends.filter((t) => t.momentum === 'hot');
@@ -120,6 +121,27 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin text-accent' : ''}`} />{' '}
           Sync Trends
         </Button>
+      </div>
+
+      {/* Platform Selector Tabs */}
+      <div className="space-y-1.5 flex flex-col select-none">
+        <label className="text-xs font-mono font-bold uppercase tracking-wider text-muted px-1">Select Live Trends Channel</label>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {['LinkedIn', 'Facebook', 'Twitter/X'].map((plat) => (
+            <button
+              key={plat}
+              type="button"
+              onClick={() => setActivePlatform(plat)}
+              className={`text-xs px-4 py-2.5 rounded-xl border font-mono transition-all font-bold whitespace-nowrap active:scale-95 cursor-pointer ${
+                activePlatform === plat
+                  ? 'bg-accent/15 border-accent text-accent shadow-[0_0_15px_rgba(0,212,170,0.1)]'
+                  : 'bg-surface/50 border-border-accent/40 text-muted hover:text-text-main'
+              }`}
+            >
+              {plat === 'Twitter/X' ? 'X / Twitter' : plat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 2. Error Message banner */}
@@ -159,7 +181,11 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {hotTrends.map((trend, idx) => (
-                  <TrendCard key={idx} trend={trend} onCreateContent={onNavigateToSuggest} />
+                  <TrendCard 
+                    key={idx} 
+                    trend={trend} 
+                    onCreateContent={(topic) => onNavigateToSuggest(`Trend Topic: "${trend.topic}" (Context: ${trend.summary} - Focus Angle: ${trend.contentAngle})`, activePlatform)} 
+                  />
                 ))}
               </div>
             </div>
@@ -173,7 +199,11 @@ export function TrendsView({ onNavigateToSuggest }: TrendsViewProps) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {risingTrends.map((trend, idx) => (
-                  <TrendCard key={idx} trend={trend} onCreateContent={onNavigateToSuggest} />
+                  <TrendCard 
+                    key={idx} 
+                    trend={trend} 
+                    onCreateContent={(topic) => onNavigateToSuggest(`Trend Topic: "${trend.topic}" (Context: ${trend.summary} - Focus Angle: ${trend.contentAngle})`, activePlatform)} 
+                  />
                 ))}
               </div>
             </div>

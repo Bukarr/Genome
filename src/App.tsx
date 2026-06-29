@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { WifiOff, Battery, Wifi, Cpu, Layers, Terminal, Copy, Check, Apple, Smartphone, Download, X, Share } from 'lucide-react';
+import { WifiOff, Battery, Wifi, Cpu, Layers, Terminal, Copy, Check, Apple, Smartphone, Download, X, Share, Lock, Volume2, VolumeX } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useProfileStore } from './store/profileStore';
 import { useThemeStore, applyTheme } from './store/themeStore';
 import { useSystemStore } from './store/systemStore';
+import { useContentStore } from './store/contentStore';
 
 // Layout Imports
 import { MobileNav, TabType } from './components/layout/MobileNav';
@@ -24,8 +26,9 @@ import { SplashScreen } from './components/ui/SplashScreen';
 
 export default function App() {
   const { profile } = useProfileStore();
-  const { theme } = useThemeStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { offlineResilientMode, mobileSimulated, setMobileSimulated, simulatedPlatform, setSimulatedPlatform } = useSystemStore();
+  const { clearSuggestions, clearCacheOnExit } = useContentStore();
 
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -40,6 +43,18 @@ export default function App() {
 
   // Prefills targeting the Suggest Generation screen
   const [prefilledTopic, setPrefilledTopic] = useState('');
+  const [prefilledPlatform, setPrefilledPlatform] = useState('');
+  
+  // Premium Simulator Customizations
+  const [deviceType, setDeviceType] = useState<'iphone' | 'galaxy' | 'pixel'>('iphone');
+  const [deviceColor, setDeviceColor] = useState<'titanium' | 'obsidian' | 'gold' | 'emerald'>('titanium');
+  const [batteryLevel, setBatteryLevel] = useState(88);
+  const [isCharging, setIsCharging] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState<'wifi' | '5g' | 'offline'>('5g');
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [volumeLevel, setVolumeLevel] = useState(75);
+  const [showVolumeUI, setShowVolumeUI] = useState(false);
+  const [isScreenLocked, setIsScreenLocked] = useState(false);
   
   // Offline detection states
   const [isOffline, setIsOffline] = useState(!window.navigator.onLine);
@@ -105,6 +120,48 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (showVolumeUI) {
+      const t = setTimeout(() => setShowVolumeUI(false), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [showVolumeUI]);
+
+  useEffect(() => {
+    if ('getBattery' in navigator) {
+      (navigator as any).getBattery().then((batt: any) => {
+        setBatteryLevel(Math.round(batt.level * 100));
+        setIsCharging(batt.charging);
+        
+        const onLevelChange = () => setBatteryLevel(Math.round(batt.level * 100));
+        const onChargeChange = () => setIsCharging(batt.charging);
+        
+        batt.addEventListener('levelchange', onLevelChange);
+        batt.addEventListener('chargingchange', onChargeChange);
+      }).catch(() => {});
+    }
+  }, []);
+
+  // Clear Content on Exit (when switching tabs)
+  useEffect(() => {
+    if (clearCacheOnExit) {
+      clearSuggestions();
+    }
+  }, [activeTab, clearCacheOnExit, clearSuggestions]);
+
+  // Clear Content on Exit (when closing the application)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (clearCacheOnExit) {
+        clearSuggestions();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [clearCacheOnExit, clearSuggestions]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCmd(text);
@@ -139,9 +196,12 @@ export default function App() {
   }, [profile]);
 
   // Navigate & Pre-fill utility
-  const handleNavigateToSuggestWithTopic = (tab: TabType, topicText?: string) => {
+  const handleNavigateToSuggestWithTopic = (tab: TabType, topicText?: string, platformText?: string) => {
     if (topicText) {
       setPrefilledTopic(topicText);
+    }
+    if (platformText) {
+      setPrefilledPlatform(platformText);
     }
     setActiveTab(tab);
   };
@@ -150,6 +210,7 @@ export default function App() {
   const handleDraftPostFromSchedule = (platform: string, format: string, topic: string) => {
     // Navigates directly to content suggestions, pre-fills topic
     setPrefilledTopic(`Topic: ${topic} [Platform Target: ${platform}, Size: ${format}]`);
+    setPrefilledPlatform(platform);
     setActiveTab('suggest');
   };
 
@@ -163,12 +224,14 @@ export default function App() {
           <SuggestView
             prefilledTopic={prefilledTopic}
             clearPrefilledTopic={() => setPrefilledTopic('')}
+            prefilledPlatform={prefilledPlatform}
+            clearPrefilledPlatform={() => setPrefilledPlatform('')}
           />
         );
       case 'trends':
         return (
           <TrendsView
-            onNavigateToSuggest={(topic) => handleNavigateToSuggestWithTopic('suggest', topic)}
+            onNavigateToSuggest={(topic, platform) => handleNavigateToSuggestWithTopic('suggest', topic, platform)}
           />
         );
       case 'calendar':
@@ -236,7 +299,7 @@ export default function App() {
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
                 <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-[9px] uppercase tracking-widest font-mono text-accent font-extrabold">Capacitor Studio</span>
+                <span className="text-[9px] uppercase tracking-widest font-mono text-accent font-extrabold">Capacitor Studio v3.5</span>
               </div>
               <h2 className="text-lg font-syne font-bold text-text-main">
                 Mobile Native Hub
@@ -251,7 +314,10 @@ export default function App() {
               <label className="text-[10px] font-mono uppercase tracking-wider text-muted font-bold block">Simulated Platform</label>
               <div className="grid grid-cols-2 gap-1.5 bg-card/60 p-1 rounded-xl border border-border-accent/30">
                 <button
-                  onClick={() => setSimulatedPlatform('ios')}
+                  onClick={() => {
+                    setSimulatedPlatform('ios');
+                    setDeviceType('iphone');
+                  }}
                   className={`py-1.5 px-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                     simulatedPlatform === 'ios'
                       ? 'bg-accent text-white shadow-sm'
@@ -261,7 +327,10 @@ export default function App() {
                   <Apple className="h-3.5 w-3.5" /> Apple iOS
                 </button>
                 <button
-                  onClick={() => setSimulatedPlatform('android')}
+                  onClick={() => {
+                    setSimulatedPlatform('android');
+                    setDeviceType('galaxy');
+                  }}
                   className={`py-1.5 px-2 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                     simulatedPlatform === 'android'
                       ? 'bg-accent text-white shadow-sm'
@@ -273,49 +342,168 @@ export default function App() {
               </div>
             </div>
 
-            {/* Native API Simulator */}
-            <div className="bg-card/40 border border-border-accent/25 rounded-xl p-3.5 space-y-3">
-              <h3 className="text-[11px] font-extrabold uppercase font-mono tracking-wider text-muted flex items-center gap-1.5">
-                <Cpu className="h-3.5 w-3.5 text-accent" /> Simulating Native APIs
+            {/* Hardware Chassis Customization */}
+            <div className="space-y-2.5 bg-card/30 border border-border-accent/20 rounded-xl p-3">
+              <h3 className="text-[10px] font-extrabold uppercase font-mono tracking-wider text-muted">
+                Hardware Customizer
               </h3>
               
-              <div className="space-y-2">
-                {/* Haptics */}
+              {/* Device Selector */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted font-mono">Device Model</span>
+                <select
+                  value={deviceType}
+                  onChange={(e) => setDeviceType(e.target.value as any)}
+                  className="w-full bg-bg border border-border-accent/45 text-text-main rounded-lg text-xs py-1 px-2 font-mono focus:border-accent outline-none cursor-pointer"
+                >
+                  <option value="iphone">iPhone 15 Pro (Dynamic Island)</option>
+                  <option value="galaxy">Samsung S24 (Sleek Bezel)</option>
+                  <option value="pixel">Google Pixel 8 Pro (Curved Bezel)</option>
+                </select>
+              </div>
+
+              {/* Chassis Color */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[10px] text-muted font-mono">Chassis Armor Color</span>
+                <div className="flex gap-2 items-center">
+                  {[
+                    { id: 'titanium', label: 'Titanium', bg: 'bg-slate-500 border-slate-400' },
+                    { id: 'obsidian', label: 'Obsidian', bg: 'bg-slate-900 border-slate-800' },
+                    { id: 'gold', label: 'Champagne', bg: 'bg-amber-600 border-amber-500' },
+                    { id: 'emerald', label: 'Alpine', bg: 'bg-teal-800 border-teal-700' },
+                  ].map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setDeviceColor(color.id as any)}
+                      title={color.label}
+                      className={`h-6 w-6 rounded-full border-2 ${color.bg} transition-all active:scale-90 ${
+                        deviceColor === color.id ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg scale-110' : 'opacity-85 hover:opacity-100'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Screen Orientation */}
+              <div className="flex justify-between items-center pt-2 border-t border-border-accent/15">
+                <span className="text-[10px] text-muted font-mono">Landscape Orientation</span>
+                <button
+                  onClick={() => setIsLandscape(!isLandscape)}
+                  className={`w-10 h-5 rounded-full p-0.5 transition-all duration-200 outline-none ${
+                    isLandscape ? 'bg-accent' : 'bg-border-accent'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-all ${
+                    isLandscape ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Simulated Sensors / Systems */}
+            <div className="bg-card/40 border border-border-accent/25 rounded-xl p-3.5 space-y-3">
+              <h3 className="text-[11px] font-extrabold uppercase font-mono tracking-wider text-muted flex items-center gap-1.5">
+                <Cpu className="h-3.5 w-3.5 text-accent" /> System Mock Controls
+              </h3>
+              
+              <div className="space-y-2.5">
+                {/* Battery percentage */}
                 <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-muted">Haptics:</span>
-                    <span className="text-accent font-bold">Capacitor.Haptics</span>
+                  <div className="flex justify-between text-[10px] font-mono mb-1 text-muted">
+                    <span>Battery Status:</span>
+                    <span className="text-bright font-bold">{batteryLevel}% {isCharging ? '(Charging)' : ''}</span>
                   </div>
-                  <Button
-                    onClick={() => {
-                      if (window.navigator.vibrate) {
-                        window.navigator.vibrate([100]);
-                      }
-                      toast.success(`Haptic ${simulatedPlatform === 'ios' ? 'Taptic' : 'Vibe'} simulation!`);
-                    }}
-                    variant="ghost"
-                    className="w-full h-7 text-[10px] font-mono bg-bg/50 hover:bg-bg border border-border-accent/30 rounded-lg justify-center"
-                  >
-                    Vibrate Device
-                  </Button>
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={batteryLevel}
+                    onChange={(e) => setBatteryLevel(Number(e.target.value))}
+                    className="w-full accent-accent bg-bg/50 rounded-lg appearance-none h-1.5 cursor-pointer"
+                  />
+                  <label className="flex items-center gap-1.5 mt-1 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isCharging}
+                      onChange={(e) => setIsCharging(e.target.checked)}
+                      className="rounded border-border-accent/50 bg-bg text-accent focus:ring-accent w-3 h-3 cursor-pointer"
+                    />
+                    <span className="text-[9px] text-muted font-mono">Simulate plug-in power (Charging)</span>
+                  </label>
                 </div>
 
-                {/* Sharing */}
-                <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-muted">Share Sheet:</span>
-                    <span className="text-accent font-bold">Capacitor.Share</span>
+                {/* Connection Speed */}
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted font-mono block">Simulate Carrier Speed</span>
+                  <div className="grid grid-cols-3 gap-1 bg-bg p-0.5 rounded-lg border border-border-accent/30 text-[9px] font-mono text-center">
+                    {[
+                      { id: 'wifi', label: 'Wi-Fi' },
+                      { id: '5g', label: '5G LTE' },
+                      { id: 'offline', label: 'Offline' },
+                    ].map((net) => (
+                      <button
+                        key={net.id}
+                        onClick={() => {
+                          setNetworkStatus(net.id as any);
+                          if (net.id === 'offline') {
+                            setIsOffline(true);
+                          } else {
+                            setIsOffline(false);
+                          }
+                        }}
+                        className={`py-1 rounded font-bold transition-all ${
+                          networkStatus === net.id
+                            ? 'bg-accent/20 text-accent border border-accent/20'
+                            : 'text-muted hover:text-text-main'
+                        }`}
+                      >
+                        {net.label}
+                      </button>
+                    ))}
                   </div>
+                </div>
+
+                {/* Lock Screen simulation */}
+                <div className="pt-2 border-t border-border-accent/15 flex justify-between items-center">
+                  <span className="text-[10px] text-muted font-mono">Lock Device Screen</span>
                   <Button
-                    onClick={() => {
-                      toast.success(`Mock Capacitor Share triggered!`);
-                    }}
+                    onClick={() => setIsScreenLocked(!isScreenLocked)}
                     variant="ghost"
-                    className="w-full h-7 text-[10px] font-mono bg-bg/50 hover:bg-bg border border-border-accent/30 rounded-lg justify-center"
+                    className="h-6 px-2.5 text-[10px] font-mono bg-bg/50 border border-border-accent/30 rounded-lg hover:bg-bg"
                   >
-                    Deploy Native Share
+                    {isScreenLocked ? 'Unlock Screen' : 'Press Sleep Button'}
                   </Button>
                 </div>
+              </div>
+            </div>
+
+            {/* Native API Simulator */}
+            <div className="bg-card/20 border border-border-accent/20 rounded-xl p-3 space-y-2">
+              <h3 className="text-[10px] font-extrabold uppercase font-mono tracking-wider text-muted">
+                Capacitor API Triggers
+              </h3>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Button
+                  onClick={() => {
+                    if (window.navigator.vibrate) {
+                      window.navigator.vibrate([100]);
+                    }
+                    toast.success(`Haptic Vibration simulated!`);
+                  }}
+                  variant="ghost"
+                  className="h-7 text-[9px] font-mono bg-bg/50 hover:bg-bg border border-border-accent/30 rounded-lg justify-center"
+                >
+                  Trigger Haptic
+                </Button>
+                <Button
+                  onClick={() => {
+                    toast.success(`Active Share sheet deployed!`);
+                  }}
+                  variant="ghost"
+                  className="h-7 text-[9px] font-mono bg-bg/50 hover:bg-bg border border-border-accent/30 rounded-lg justify-center"
+                >
+                  Trigger Share
+                </Button>
               </div>
             </div>
 
@@ -325,7 +513,7 @@ export default function App() {
                 <label className="text-[10px] font-mono uppercase tracking-wider text-muted font-bold block">Terminal CLI Scripts</label>
                 <Terminal className="h-3 w-3 text-muted" />
               </div>
-              <div className="space-y-2 bg-card/60 p-2.5 rounded-xl border border-border-accent/30">
+              <div className="space-y-1.5 bg-card/60 p-2.5 rounded-xl border border-border-accent/30">
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between items-center font-mono text-muted text-[10px] border-b border-border-accent/15 pb-0.5">
                     <span>Vite Build & Sync</span>
@@ -335,18 +523,6 @@ export default function App() {
                   </div>
                   <code className="block text-[9px] font-mono text-accent bg-bg/50 p-1.5 rounded select-all">
                     npm run build && npx cap sync
-                  </code>
-                </div>
-
-                <div className="space-y-1 text-xs pt-1">
-                  <div className="flex justify-between items-center font-mono text-muted text-[10px] border-b border-border-accent/15 pb-0.5">
-                    <span>Launch Native IDE</span>
-                    <button onClick={() => copyToClipboard(`npx cap open ${simulatedPlatform}`)} className="hover:text-text-main flex items-center gap-1">
-                      {copiedCmd === `npx cap open ${simulatedPlatform}` ? <Check className="h-3 w-3 text-accent" /> : <Copy className="h-2.5 w-2.5" />}
-                    </button>
-                  </div>
-                  <code className="block text-[9px] font-mono text-accent bg-bg/50 p-1.5 rounded select-all">
-                    npx cap open {simulatedPlatform}
                   </code>
                 </div>
               </div>
@@ -384,25 +560,156 @@ export default function App() {
             </div>
           </div>
 
-          {/* Device Outer Frame */}
-          <div className="relative my-4 mx-auto rounded-[48px] border-[10px] border-slate-800 dark:border-slate-700 bg-surface shadow-[0_20px_50px_rgba(0,0,0,0.45)] w-[340px] h-[690px] flex flex-col overflow-hidden transition-all duration-300">
-            {/* Phone Notch / Island */}
-            {simulatedPlatform === 'ios' ? (
-              <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-24 h-5 bg-slate-900 rounded-full z-50 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-slate-800 border border-slate-700/50 mr-1.5" />
-                <div className="w-1 h-1 rounded-full bg-blue-900/30" />
+          {/* Device Outer Frame with physical buttons */}
+          <div 
+            className={`relative my-4 mx-auto bg-slate-950 shadow-[0_25px_60px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-all duration-300 border-[10px] ${
+              deviceColor === 'titanium' ? 'border-slate-500 ring-4 ring-slate-400/20' :
+              deviceColor === 'obsidian' ? 'border-slate-800 ring-4 ring-slate-900/20' :
+              deviceColor === 'gold' ? 'border-amber-600 ring-4 ring-amber-500/20' :
+              'border-teal-800 ring-4 ring-teal-700/20'
+            } ${
+              deviceType === 'iphone' ? 'rounded-[50px]' :
+              deviceType === 'galaxy' ? 'rounded-[24px]' :
+              'rounded-[38px]'
+            } ${
+              isLandscape ? 'w-[690px] h-[340px]' : 'w-[340px] h-[690px]'
+            }`}
+          >
+            {/* Physical Button Simulations Outside Frame */}
+            {deviceType === 'iphone' ? (
+              <>
+                {/* Action button */}
+                <button 
+                  onClick={() => {
+                    toggleTheme();
+                    toast.success("Action Button pressed: Switched application theme!");
+                  }}
+                  className="absolute left-[-13px] top-[60px] w-1 h-5 bg-inherit border-l-2 border-inherit rounded-l-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95" 
+                  title="iOS Action Button"
+                />
+                {/* Vol up */}
+                <button 
+                  onClick={() => {
+                    setVolumeLevel(prev => Math.min(prev + 10, 100));
+                    setShowVolumeUI(true);
+                  }}
+                  className="absolute left-[-13px] top-[95px] w-1 h-8 bg-inherit border-l-2 border-inherit rounded-l-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95"
+                  title="Volume Up"
+                />
+                {/* Vol down */}
+                <button 
+                  onClick={() => {
+                    setVolumeLevel(prev => Math.max(prev - 10, 0));
+                    setShowVolumeUI(true);
+                  }}
+                  className="absolute left-[-13px] top-[135px] w-1 h-8 bg-inherit border-l-2 border-inherit rounded-l-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95"
+                  title="Volume Down"
+                />
+                {/* Power button */}
+                <button 
+                  onClick={() => setIsScreenLocked(!isScreenLocked)}
+                  className="absolute right-[-13px] top-[110px] w-1 h-12 bg-inherit border-r-2 border-inherit rounded-r-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95"
+                  title="Power (Sleep)"
+                />
+              </>
+            ) : (
+              <>
+                {/* Android Volume Key */}
+                <button 
+                  onClick={() => {
+                    setVolumeLevel(prev => Math.min(prev + 10, 100));
+                    setShowVolumeUI(true);
+                  }}
+                  className="absolute right-[-13px] top-[75px] w-1 h-14 bg-inherit border-r-2 border-inherit rounded-r-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95"
+                  title="Volume Key"
+                />
+                {/* Android Power Key */}
+                <button 
+                  onClick={() => setIsScreenLocked(!isScreenLocked)}
+                  className="absolute right-[-13px] top-[145px] w-1 h-8 bg-inherit border-r-2 border-inherit rounded-r-md hover:brightness-125 cursor-pointer z-50 transition-all active:scale-95"
+                  title="Power Key"
+                />
+              </>
+            )}
+
+            {/* Screen Glass Reflections overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/2 to-white/5 pointer-events-none z-45 select-none" />
+
+            {/* Simulated Lock Screen Layer */}
+            {isScreenLocked && (
+              <div className="absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-6 text-center select-none animate-fade-in">
+                <Lock className="h-10 w-10 text-accent animate-pulse mb-3" />
+                <span className="text-xl font-mono font-bold tracking-tight text-white">{currentTimeStr}</span>
+                <span className="text-[10px] font-mono text-muted tracking-wider uppercase mt-1">DEVICE LOCKED</span>
+                <button 
+                  onClick={() => setIsScreenLocked(false)}
+                  className="mt-6 px-4 py-2 bg-accent hover:bg-bright text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer active:scale-95"
+                >
+                  Unlock Device
+                </button>
+              </div>
+            )}
+
+            {/* Screen Notch / Camera Island cutout */}
+            {deviceType === 'iphone' ? (
+              <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-24 h-5 bg-slate-900 rounded-full z-50 flex items-center justify-center border border-slate-800/40 shadow-inner">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-700/50 mr-1.5 flex items-center justify-center">
+                  <div className="w-1 h-1 rounded-full bg-blue-900/40" />
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-800/80 mr-4" />
+                <div className="text-[7px] font-mono font-semibold text-accent/80 animate-pulse">Pulsr</div>
               </div>
             ) : (
-              <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-slate-900 rounded-full z-50 border border-slate-800 flex items-center justify-center" />
+              <div className="absolute top-2.5 left-1/2 transform -translate-x-1/2 w-3.5 h-3.5 bg-slate-950 rounded-full z-50 border border-slate-800/60 shadow-inner flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-950/50" />
+              </div>
+            )}
+
+            {/* On-Screen Volume Slider Overlay */}
+            {showVolumeUI && (
+              <div className="absolute left-3 top-20 z-50 bg-slate-900/90 backdrop-blur-md rounded-xl p-2 w-7 h-28 flex flex-col items-center justify-between border border-border-accent/30 animate-fade-in select-none">
+                <span className="text-[8px] font-mono font-bold text-muted">
+                  {volumeLevel === 0 ? <VolumeX className="h-3 w-3 text-error" /> : <Volume2 className="h-3 w-3 text-accent" />}
+                </span>
+                <div className="flex-1 w-1 bg-slate-800 rounded-full relative overflow-hidden my-2">
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 bg-accent transition-all duration-100 rounded-full" 
+                    style={{ height: `${volumeLevel}%` }} 
+                  />
+                </div>
+                <span className="text-[8px] font-mono font-bold text-white">{volumeLevel}%</span>
+              </div>
             )}
 
             {/* Simulated Native Status Bar */}
             <div className="h-8 bg-surface px-5 pt-1.5 flex justify-between items-center text-[10px] font-sans font-extrabold select-none z-40 shrink-0 border-b border-border-accent/5">
               <span className="font-mono">{currentTimeStr || '09:41'}</span>
               <div className="flex items-center gap-1.5">
-                <Wifi className="h-3 w-3 text-text-main" />
-                <span className="text-[8px] font-mono">5G</span>
-                <Battery className="h-3 w-3 text-text-main" />
+                {/* Network connectivity symbol */}
+                {networkStatus === 'offline' || isOffline ? (
+                  <WifiOff className="h-3 w-3 text-error animate-pulse" />
+                ) : networkStatus === 'wifi' ? (
+                  <Wifi className="h-3 w-3 text-accent" />
+                ) : (
+                  <div className="flex items-center gap-0.5">
+                    <Wifi className="h-3 w-3 text-text-main" />
+                    <span className="text-[7px] font-mono font-extrabold text-accent">5G</span>
+                  </div>
+                )}
+                
+                {/* Battery display */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[8px] font-mono font-bold text-muted">{batteryLevel}%</span>
+                  <div className="w-4.5 h-2.5 border border-text-main/50 rounded-sm p-[1px] flex items-center relative">
+                    <div 
+                      className={`h-full rounded-2xs ${batteryLevel < 20 ? 'bg-error' : 'bg-accent'}`} 
+                      style={{ width: `${batteryLevel}%` }} 
+                    />
+                    {isCharging && (
+                      <span className="absolute inset-0 flex items-center justify-center text-[7px] text-yellow-400 font-extrabold font-mono">⚡</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -411,17 +718,28 @@ export default function App() {
               {/* Header inside device */}
               <TopBar activeTab={activeTab} setActiveTab={setActiveTab} />
               
-              {/* Main view content in device */}
-              <div className="flex-1 p-2 pb-24 relative">
-                {renderTabContent()}
+              {/* Main view content with screen transitions */}
+              <div className="flex-1 p-2 pb-24 relative overflow-y-auto overflow-x-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full"
+                  >
+                    {renderTabContent()}
+                  </motion.div>
+                </AnimatePresence>
               </div>
               
               {/* Floating mobile nav inside device */}
-              <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
+              <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isSimulator={true} />
             </div>
 
-            {/* iOS Bottom Swipe Bar Indicator */}
-            {simulatedPlatform === 'ios' && (
+            {/* Swipe indicator bar (iOS Only) */}
+            {simulatedPlatform === 'ios' && !isLandscape && (
               <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-28 h-0.5 bg-slate-400 dark:bg-slate-600 rounded-full z-50 select-none pointer-events-none" />
             )}
           </div>
@@ -450,7 +768,17 @@ export default function App() {
 
           {/* Actual responsive workspace view - bottom padded to handle floating nav on mobile */}
           <main className="flex-1 p-4 pb-28 md:p-8 max-w-5xl w-full mx-auto select-none mt-2">
-            {renderTabContent()}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22, ease: "easeInOut" }}
+              >
+                {renderTabContent()}
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
       </div>

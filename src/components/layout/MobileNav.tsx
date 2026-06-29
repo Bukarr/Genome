@@ -6,9 +6,10 @@ export type TabType = 'home' | 'suggest' | 'trends' | 'calendar' | 'chat' | 'set
 interface MobileNavProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
+  isSimulator?: boolean;
 }
 
-export function MobileNav({ activeTab, setActiveTab }: MobileNavProps) {
+export function MobileNav({ activeTab, setActiveTab, isSimulator = false }: MobileNavProps) {
   const items = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'suggest', label: 'Suggest', icon: Sparkles },
@@ -18,8 +19,13 @@ export function MobileNav({ activeTab, setActiveTab }: MobileNavProps) {
   ] as const;
 
   return (
-    <nav className="md:hidden fixed bottom-4 left-4 right-4 z-40 bg-surface/90 backdrop-blur-md border border-border-accent px-2 rounded-2xl shadow-2xl max-w-lg mx-auto select-none transition-all">
-      <div className="flex justify-around items-center h-16">
+    <nav className={cn(
+      "z-40 bg-surface/90 backdrop-blur-md border border-border-accent px-2 rounded-2xl shadow-2xl max-w-lg mx-auto select-none transition-all",
+      isSimulator 
+        ? "absolute bottom-3 left-3 right-3 flex" 
+        : "fixed bottom-4 left-4 right-4 md:hidden flex"
+    )}>
+      <div className="flex justify-around items-center h-16 w-full">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;

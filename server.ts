@@ -251,7 +251,7 @@ app.post('/api/gemini/suggest', async (req: Request, res: Response) => {
 
     const prompt = `${profileContext}
 
-Generate a premium, scroll-stopping social media post suggestions for the platform "${platform}" in the format "${format}".
+Generate a premium, scroll-stopping social media post suggestion for the platform "${platform}" in the format "${format}".
 ${topicConstraint}
 
 Your output must format strictly as a JSON object matching this structure:
@@ -264,7 +264,17 @@ Your output must format strictly as a JSON object matching this structure:
   "engagementHook": "A powerful scroll-stopping first sentence or question"
 }
 
-Ensure the post feels written by a real expert in ${profile.niche || 'the field'}, utilizing their exact tone: ${profile.tone || 'engaging'}. It should NOT feel generic or AI-like.
+PLATFORM-SPECIFIC TAILORING INSTRUCTIONS:
+- Twitter/X: Must be extremely concise, punchy, high-leverage. If thread starter, use spaced numbering to build curiosity.
+- LinkedIn: Highly professional, structured, conversational but educational. Include professional layout spacing, clear takeaway points, and insightful value.
+- Facebook: Conversational, community-focused, and friendly. Invite shared opinions, questions, or personal connection.
+- Instagram: Highly engaging, aesthetically spaced caption style with strong visual instructions or reel descriptions.
+- Threads: Lively, engaging, text-first, highly responsive, relatable conversational style.
+- TikTok: Snappy video hook and script-outline with timing cues and instructions.
+
+CRITICAL LANGUAGE & STYLE INSTRUCTIONS:
+- Do NOT use Pidgin, slang, or localized informal dialects (like Pidgin English) unless the user has explicitly requested it in the topic or tone instruction. Keep the language standard, clean, elite, grammatical, and highly engaging.
+- Ensure the post feels written by a real expert in ${profile.niche || 'the field'}, utilizing their exact tone: ${profile.tone || 'engaging'}. It should NOT feel generic or AI-like.
 ${JSON_FORCE_INSTRUCTION}`;
 
     const parsed = await generateContentJSONWithRetry(ai, {
@@ -291,7 +301,7 @@ ${JSON_FORCE_INSTRUCTION}`;
     const headline = `Mastering ${baseTopic}`;
 
     let content = '';
-    if (format === 'Short Post') {
+    if (format === 'Short Post' || format === 'Standard Post') {
       content = `The honest truth about ${profile.niche || 'growth'}: 
 
 Most people completely overcomplicate their primary steps. You do not need expensive consulting or complex software setups to start.
@@ -313,7 +323,7 @@ Here is the exact framework I now use to save 12 hours every single week:
 4/ Batch similar tasks into dedicated schedules.
 
 Let’s unpack how you can implement this starting today:`;
-    } else if (format === 'Carousel Concept') {
+    } else if (format === 'Carousel Concept' || format === 'Story Outline') {
       content = `SLIDE 1: Unlocking Next-Gen Growth in ${profile.niche || 'our space'}.
 SLIDE 2: The primary friction you feel isn't a lack of tools, it is a lack of simple structure.
 SLIDE 3: Step 1 - Define your absolute north-star metric.
@@ -336,18 +346,89 @@ SLIDE 6: Ready to scale? Drop a comment and tell me what you're building!`;
   }
 });
 
+// 2b. Platform Trends Endpoint with search grounding and country location awareness
+app.post('/api/gemini/platform-trends', async (req: Request, res: Response) => {
+  try {
+    const { profile, platform } = req.body || {};
+    if (!profile || !platform) {
+      return res.status(400).json({ error: 'Profile and platform are required' });
+    }
+
+    const location = profile.geolocation || 'United States';
+    const ai = getAIClient();
+    const profileContext = buildProfileContext(profile);
+
+    const prompt = `${profileContext}
+
+You are a real-time social media trend intelligence engine.
+Your goal is to perform a Google Search to identify real-world, current, and active trending topics, viral hashtags, popular content formats, or recent news on the specific social media platform "${platform}" in the country/location "${location}" right now.
+
+Do NOT generate generic, placeholder, or mock trends. You MUST use the Google Search tool to find actual, up-to-date real-life trending elements.
+Then, filter and connect these real-world trends to the user's niche: "${profile.niche || 'general content creation'}" and profession: "${profile.profession || 'creator'}".
+
+CRITICAL LANGUAGE constraint: Do NOT write in Pidgin or use slang unless explicitly requested. Keep the language standard, clean, grammatical, professional and highly engaging.
+
+Your response must format strictly as a JSON array of objects, containing exactly 3 trending items.
+Each object must have this structure:
+{
+  "topic": "A short, catchy real-world trending topic, search phrase, or hashtag",
+  "reason": "Why this is trending on ${platform} in ${location} right now, referencing the real-world events or content shift",
+  "contentAngle": "A recommended angle/context to generate a post for this trend tailored to their niche (${profile.niche})"
+}
+${JSON_FORCE_INSTRUCTION}`;
+
+    // Note: Do NOT use responseMimeType alongside googleSearch to avoid API validation errors
+    const parsed = await generateContentJSONWithRetry(ai, {
+      model: FLASH_MODEL,
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    res.json(parsed);
+  } catch (error: any) {
+    console.warn('[Platform Trends API Exception] Falling back to default list:', error?.message || error);
+    res.setHeader('x-pulsr-fallback', 'true');
+    const { platform, profile } = req.body || {};
+    const location = profile?.geolocation || 'your location';
+    const niche = profile?.niche || 'tech and productivity';
+    
+    const fallbackTrends = [
+      {
+        topic: `${niche} minimalism`,
+        reason: `High search volume on ${platform} in ${location} as users look to streamline their tools.`,
+        contentAngle: `Sharing a direct checklist of the 3 key components in your ${niche} toolkit.`
+      },
+      {
+        topic: `Time audit in ${location}`,
+        reason: `Emerging viral discussions on ${platform} about reclaiming personal focus.`,
+        contentAngle: `How professionals in ${location} can run a simple, manual 15-minute time audit.`
+      },
+      {
+        topic: `Local networking in ${niche}`,
+        reason: `Trending professional advice posts on ${platform} around building real community relationships.`,
+        contentAngle: `A post asking local peers in ${location} to share their top professional goal for the quarter.`
+      }
+    ];
+    res.json(fallbackTrends);
+  }
+});
+
 // 3. Trends Endpoint (Uses Gemini Search Grounding)
 app.post('/api/gemini/trends', async (req: Request, res: Response) => {
   try {
-    const { profile } = req.body || {};
+    const { profile, platform } = req.body || {};
     if (!profile) {
       return res.status(400).json({ error: 'Profile is required' });
     }
 
-    const cacheKey = `trends_${profile.niche || ''}`;
+    const targetPlatform = platform || profile.primaryPlatform || 'LinkedIn';
+    const location = profile.geolocation || 'United States';
+    const cacheKey = `trends_${targetPlatform.replace(/[^a-zA-Z0-9]/g, '_')}_${profile.niche || ''}_${location.replace(/[^a-zA-Z0-9]/g, '_')}`;
     const cached = getCachedData(cacheKey);
     if (cached) {
-      console.log(`[Pulsr Lightning Cache] Trends for niche: ${profile.niche} returned instantly from cache.`);
+      console.log(`[Pulsr Lightning Cache] Trends for ${targetPlatform} in ${location} returned instantly from cache.`);
       return res.json(cached);
     }
 
@@ -356,15 +437,17 @@ app.post('/api/gemini/trends', async (req: Request, res: Response) => {
 
     const prompt = `${profileContext}
 
-Perform a search and analyze real-world trends, hot discussion topics, conversations, and industry news relative to the user's specific niche: "${profile.niche || 'general'}". 
+Perform a search and analyze real-world trends, hot discussion topics, conversations, and industry news relative to the user's specific niche: "${profile.niche || 'general'}" specifically on the platform: "${targetPlatform}" in the country/location: "${location}" right now. 
+Do NOT generate generic, placeholder, or mock trends. You MUST use the Google Search tool to find actual, live, up-to-date real-life trending elements on "${targetPlatform}" in "${location}" right now.
+
 Identify exactly 4 "hot" (high momentum, current viral/news) topics and 4 "rising" (industry shifts, emerging conversations) topics. For each topic, construct a tailored action plan.
 
 Your response must format strictly as a JSON array of objects, containing exactly 4 items mapped as "hot" and 4 items mapped as "rising" (8 items in total).
 
 Schema requirement for each item:
 {
-  "topic": "The trending keyword/headline",
-  "summary": "A clear description of why this is trending right now",
+  "topic": "The trending keyword/headline on ${targetPlatform}",
+  "summary": "A clear description of why this is trending right now on ${targetPlatform} in ${location}, referencing real-world events, hashtags, or content shifts",
   "momentum": "hot" | "rising",
   "relevanceReason": "How this connects specifically to this creator's niche and audience",
   "contentAngle": "The unique angle/hook this creator should use to write a post about this trend"
@@ -697,6 +780,9 @@ Original text:
 """
 ${text}
 """
+
+CRITICAL LANGUAGE & STYLE INSTRUCTIONS:
+- Do NOT use Pidgin, slang, or localized informal dialects (like Pidgin English) unless explicitly requested. Keep the language standard, clean, elite, grammatical, and highly engaging.
 
 Your response must format strictly as a JSON object:
 {

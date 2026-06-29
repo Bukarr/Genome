@@ -92,16 +92,18 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     switch (target.toLowerCase()) {
       case 'twitter':
       case 'x':
-        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullText)}`;
+        url = `https://x.com/intent/tweet?text=${encodeURIComponent(fullText)}`;
         successMsg = 'Draft copied! Opening X / Twitter composer...';
         break;
       case 'linkedin':
-        url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullText)}`;
-        successMsg = 'Draft copied! Opening LinkedIn post section...';
+        // shareActive=true triggers the active sharing box on LinkedIn homepage directly
+        url = 'https://www.linkedin.com/feed/?shareActive=true';
+        successMsg = 'Copied to clipboard! Opening LinkedIn... Press Ctrl+V / Cmd+V to paste.';
         break;
       case 'facebook':
-        url = 'https://www.facebook.com/';
-        successMsg = 'Full post copied! Opening Facebook... Click "What\'s on your mind?" and paste.';
+        // quote parameter pre-fills the text area for the share post
+        url = `https://www.facebook.com/sharer/sharer.php?u=https://pulsr.ai&quote=${encodeURIComponent(fullText)}`;
+        successMsg = 'Copied to clipboard! Opening Facebook composer... Press Ctrl+V / Cmd+V to paste.';
         break;
       case 'threads':
         url = `https://threads.net/intent/post?text=${encodeURIComponent(fullText)}`;
@@ -109,18 +111,18 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
         break;
       case 'instagram':
         url = 'https://www.instagram.com/';
-        successMsg = 'Caption copied! Opening Instagram... Create post & paste.';
+        successMsg = 'Caption copied to clipboard! Opening Instagram... Click "+" to paste and share.';
         break;
       case 'tiktok':
         url = 'https://www.tiktok.com/upload';
-        successMsg = 'Caption copied! Opening TikTok upload... Paste caption.';
+        successMsg = 'Caption copied to clipboard! Opening TikTok... Paste caption on upload screen.';
         break;
       case 'whatsapp':
         url = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullText)}`;
         successMsg = 'Draft copied! Opening WhatsApp chat...';
         break;
       case 'telegram':
-        url = `https://t.me/share/url?text=${encodeURIComponent(fullText)}`;
+        url = `https://t.me/share/url?url=&text=${encodeURIComponent(fullText)}`;
         successMsg = 'Draft copied! Opening Telegram chat...';
         break;
       case 'email':
@@ -135,10 +137,8 @@ export function PublishExportModal({ isOpen, onClose, suggestion }: PublishExpor
     trackEvent('calendar_interaction', `Shared draft to specific portal: ${target}`, { suggestionId: suggestion.id });
     toast.success(successMsg);
     
-    // Open in a new tab safely
-    setTimeout(() => {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }, 600);
+    // Open in a new tab synchronously (bypassing the browser's asynchronous popup blocker)
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   // 2. Export single suggestion JSON package
